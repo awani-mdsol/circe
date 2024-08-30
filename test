@@ -1,0 +1,52 @@
+package com.mdsol.mdr.domain
+
+import io.circe._
+import io.circe.parser._
+import io.estatico.newtype.macros.newtype
+import derevo.circe.magnolia._
+import derevo.derive
+import io.circe.magnolia.configured.Configuration
+
+object CirceTest2 extends App {
+
+  implicit val config: Configuration = Configuration.default.withSnakeCaseMemberNames
+
+  val jsonFromMH: String =
+    """
+      |{
+      |  "payment_id": "12345",
+      |  "status": "completed",
+      |  "updated_at": "2024-08-30",
+      |  "submitted_at": ""
+      |}
+    """.stripMargin
+
+  @derive(decoder)
+  @newtype case class PaymentId(value: String)
+
+  @derive(decoder)
+  @newtype case class Status(value: String)
+
+  @derive(decoder)
+  @newtype case class UpdatedAt(value: String)
+
+  @derive(decoder)
+  @newtype case class SubmittedAt(value: String)
+
+  @derive(customizableDecoder)
+  case class PaymentDetails(
+    paymentId: Option[PaymentId],
+    status: Option[Status],
+    updatedAt: Option[UpdatedAt],
+    submittedAt: Option[SubmittedAt]
+  )
+
+  // Parse the JSON string
+  val parsedResult: Either[Error, PaymentDetails] = decode[PaymentDetails](jsonFromMH)
+
+  // Handle the result
+  parsedResult match {
+    case Right(paymentDetails) => println(s"Parsed PaymentDetails: $paymentDetails")
+    case Left(error) => println(s"Failed to parse JSON: $error")
+  }
+}
